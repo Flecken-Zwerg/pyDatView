@@ -706,52 +706,52 @@ class Table(object):
         return df_new, name_new
 
 
-    def radialAvg(self, avgMethod, avgParam):
-        # TODO make this a pluggin
-        import pydatview.fast.postpro as fastlib
-        import pydatview.fast.fastfarm as fastfarm
-        df = self.data
-        base,out_ext = os.path.splitext(self.filename)
-
-        # TODO use fast_output_file  findDriverFile
-
-        # --- Detect if it's a FAST Farm file
-        sCols = ''.join(df.columns)
-        if sCols.find('WkDf')>1 or sCols.find('CtT')>0:
-            # --- FAST FARM files
-            Files=[base+ext for ext in ['.fstf','.FSTF','.Fstf','.fmas','.FMAS','.Fmas'] if os.path.exists(base+ext)]
-            if len(Files)==0:
-                fst_in=None
-                #raise Exception('Error: No .fstf file found with name: '+base+'.fstf')
-            else:
-                fst_in=Files[0]
-
-            dfRad,_,dfDiam =  fastfarm.spanwisePostProFF(fst_in,avgMethod=avgMethod,avgParam=avgParam,D=1,df=df)
-            dfs_new  = [dfRad,dfDiam]
-            names_new=[self.raw_name+'_rad',self.raw_name+'_diam']
-        else:
-            # --- FAST files
-
-            # HACK for AD file to find the right .fst file
-            iDotAD=base.lower().find('.ad')
-            if iDotAD>1:
-                base=base[:iDotAD]
-            #
-            Files=[base+ext for ext in ['.fst','.FST','.Fst','.dvr','.Dvr','.DVR'] if os.path.exists(base+ext)]
-            if len(Files)==0:
-                fst_in=None
-                #raise Exception('Error: No .fst file found with name: '+base+'.fst')
-            else:
-                fst_in=Files[0]
-
-            out= fastlib.spanwisePostPro(fst_in, avgMethod=avgMethod, avgParam=avgParam, out_ext=out_ext, df = self.data)
-            dfRadED=out['ED_bld']; dfRadAD = out['AD']; dfRadBD = out['BD']
-
-            dfs_new  = [dfRadAD, dfRadED, dfRadBD]
-            names_new=[self.raw_name+'_AD', self.raw_name+'_ED', self.raw_name+'_BD'] 
-        if all(df is None for df in dfs_new):
-            raise PyDatViewException('No OpenFAST radial data found for table: '+self.nickname)
-        return dfs_new, names_new
+#     def radialAvg(self, avgMethod, avgParam):
+#         # TODO make this a pluggin
+#         import pydatview.fast.postpro as fastlib
+#         import pydatview.fast.fastfarm as fastfarm
+#         df = self.data
+#         base,out_ext = os.path.splitext(self.filename)
+# 
+#         # TODO use fast_output_file  findDriverFile
+# 
+#         # --- Detect if it's a FAST Farm file
+#         sCols = ''.join(df.columns)
+#         if sCols.find('WkDf')>1 or sCols.find('CtT')>0:
+#             # --- FAST FARM files
+#             Files=[base+ext for ext in ['.fstf','.FSTF','.Fstf','.fmas','.FMAS','.Fmas'] if os.path.exists(base+ext)]
+#             if len(Files)==0:
+#                 fst_in=None
+#                 #raise Exception('Error: No .fstf file found with name: '+base+'.fstf')
+#             else:
+#                 fst_in=Files[0]
+# 
+#             dfRad,_,dfDiam =  fastfarm.spanwisePostProFF(fst_in,avgMethod=avgMethod,avgParam=avgParam,D=1,df=df)
+#             dfs_new  = [dfRad,dfDiam]
+#             names_new=[self.raw_name+'_rad',self.raw_name+'_diam']
+#         else:
+#             # --- FAST files
+# 
+#             # HACK for AD file to find the right .fst file
+#             iDotAD=base.lower().find('.ad')
+#             if iDotAD>1:
+#                 base=base[:iDotAD]
+#             #
+#             Files=[base+ext for ext in ['.fst','.FST','.Fst','.dvr','.Dvr','.DVR'] if os.path.exists(base+ext)]
+#             if len(Files)==0:
+#                 fst_in=None
+#                 #raise Exception('Error: No .fst file found with name: '+base+'.fst')
+#             else:
+#                 fst_in=Files[0]
+# 
+#             out= fastlib.spanwisePostPro(fst_in, avgMethod=avgMethod, avgParam=avgParam, out_ext=out_ext, df = self.data)
+#             dfRadED=out['ED_bld']; dfRadAD = out['AD']; dfRadBD = out['BD']
+# 
+#             dfs_new  = [dfRadAD, dfRadED, dfRadBD]
+#             names_new=[self.raw_name+'_AD', self.raw_name+'_ED', self.raw_name+'_BD'] 
+#         if all(df is None for df in dfs_new):
+#             raise PyDatViewException('No OpenFAST radial data found for table: '+self.nickname)
+#         return dfs_new, names_new
 
     def changeUnits(self, data=None):
         """ Change units of the table """

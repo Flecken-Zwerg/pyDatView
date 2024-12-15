@@ -744,8 +744,9 @@ def spanwiseColAD(Cols):
         ADSpanMap['^[A]*'+sB+r'N(\d*)TnInd_\[-\]'  ]   =sB+'TnInd_[-]'  
         ADSpanMap['^[A]*'+sB+r'N(\d*)AxInd_qs_\[-\]'  ]=sB+'AxInd_qs_[-]'  
         ADSpanMap['^[A]*'+sB+r'N(\d*)TnInd_qs_\[-\]'  ]=sB+'TnInd_qs_[-]'  
-        ADSpanMap['^[A]*'+sB+r'N(\d*)BEM_kp_qs\[-\]'  ]=sB+'BEM_kp_qs_[-]'  
-        ADSpanMap['^[A]*'+sB+r'N(\d*)BEM_F_qs\[-\]'   ]=sB+'BEM_F_qs_[-]'  
+        ADSpanMap['^[A]*'+sB+r'N(\d*)BEM_k_qs_\[-\]'  ]=sB+'BEM_k_qs_[-]'  
+        ADSpanMap['^[A]*'+sB+r'N(\d*)BEM_kp_qs_\[-\]' ]=sB+'BEM_kp_qs_[-]'  
+        ADSpanMap['^[A]*'+sB+r'N(\d*)BEM_F_qs_\[-\]'  ]=sB+'BEM_F_qs_[-]'  
         ADSpanMap['^[A]*'+sB+r'N(\d*)BEM_CT_qs_\[-\]' ]=sB+'BEM_CT_qs_[-]'  
         ADSpanMap['^[A]*'+sB+r'N(\d*)Chi_\[deg\]'     ]=sB+'Chi_[deg]'   
         ADSpanMap['^[A]*'+sB+r'N(\d*)Cl_\[-\]'     ]   =sB+'Cl_[-]'   
@@ -833,7 +834,6 @@ def spanwiseColAD(Cols):
         ADSpanMap['^[A]*'+sB+r'N(\d*)BEM_k_\[-\]'  ]   =sB+'BEM_k_qs_[-]'  
         ADSpanMap['^[A]*'+sB+r'N(\d*)BEM_kp_\[-\]' ]   =sB+'BEM_kp_qs_[-]'  
         ADSpanMap['^[A]*'+sB+r'N(\d*)BEM_F_\[-\]'  ]   =sB+'BEM_F_qs_[-]'  
-        ADSpanMap['^[A]*'+sB+r'N(\d*)BEM_k_qs\[-\]']   =sB+'BEM_k_qs_[-]'  
         ADSpanMap['^[A]*'+sB+r'N(\d*)AOA_\[deg\]'  ]   =sB+'Alpha_[deg]' # DBGOuts
         ADSpanMap['^[A]*'+sB+r'N(\d*)AIn_\[deg\]'  ]   =sB+'AxInd_[-]'   # DBGOuts NOTE BUG Unit
         ADSpanMap['^[A]*'+sB+r'N(\d*)ApI_\[deg\]'  ]   =sB+'TnInd_[-]'   # DBGOuts NOTE BUG Unit
