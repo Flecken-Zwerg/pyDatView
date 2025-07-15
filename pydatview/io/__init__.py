@@ -69,6 +69,7 @@ def fileFormats(userpath=None, ignoreErrors=False, verbose=False):
     from .raawmat_file            import RAAWMatFile
     from .rosco_discon_file       import ROSCODISCONFile
     from .rosco_performance_file  import ROSCOPerformanceFile
+    from .plot3d_file             import Plot3DFile
     priorities = []
     formats = []
     def addFormat(priority, fmt):
@@ -108,6 +109,7 @@ def fileFormats(userpath=None, ignoreErrors=False, verbose=False):
     addFormat(60, FileFormat(GNUPlotFile))
     addFormat(60, FileFormat(ParquetFile))
     addFormat(60, FileFormat(PickleFile))
+    addFormat(60, FileFormat(Plot3DFile))
     addFormat(70, FileFormat(CactusFile))
     addFormat(70, FileFormat(RAAWMatFile))
 
