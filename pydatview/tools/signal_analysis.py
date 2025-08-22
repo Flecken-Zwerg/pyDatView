@@ -426,15 +426,15 @@ def zero_crossings(y, x=None, direction=None, bouncingZero=False):
 # --------------------------------------------------------------------------------}
 # --- Correlation  
 # --------------------------------------------------------------------------------{
+def autoCorrCoeff(x, nMax=None):
+    if nMax is None:
+        nMax = len(x)
+    return np.array([1]+[np.corrcoef(x[:-i], x[i:])[0,1]  for i in range(1, nMax)])
+
 def correlation(x, nMax=80, dt=1, method='numpy'):
     """ 
     Compute auto correlation of a signal
     """
-
-    def acf(x, nMax=20):
-        return np.array([1]+[np.corrcoef(x[:-i], x[i:])[0,1]  for i in range(1, nMax)])
-
-
     nvec   = np.arange(0,nMax)
     if method=='manual':
         sigma2 = np.var(x)
@@ -445,7 +445,7 @@ def correlation(x, nMax=80, dt=1, method='numpy'):
             #R[i+1] = np.corrcoef(x[:-nDelay], x[nDelay:])[0,1] 
 
     elif method=='numpy':
-        R= acf(x, nMax=nMax)
+        R= autoCorrCoeff(x, nMax=nMax)
     else:
         raise NotImplementedError()
 
@@ -459,7 +459,48 @@ def correlation(x, nMax=80, dt=1, method='numpy'):
 #     return result[result.size/2:]
 
 
+def xCorrCoeff(x, y, dt=None, mode='same', return_lags=False, method='numpy'):
+    """
+    Compute and plot the cross-correlation coefficient between two signals.
 
+    Parameters:
+    - x: array-like, first signal values
+    - y: array-like, second signal values
+    """
+    from scipy.signal import correlate
+    # Compute cross-correlation
+
+    sigma1 = np.std(x)
+    sigma2 = np.std(y)
+    N      = len(x)//2
+    N3     = len(x)//3
+    if method=='manual':
+        nMax = len(x)
+        R    = np.zeros(nMax)
+        R[0] =1
+        nvec   = np.arange(0,nMax)
+        for i,nDelay in enumerate(nvec[1:]):
+            R[i+1] = np.mean(  x[0:-nDelay] * y[nDelay:]  ) / (sigma1*sigma2)
+            #R[i+1] = np.corrcoef(x[:-nDelay], x[nDelay:])[0,1] 
+        cross_corr= R
+    else:
+        cross_corr = correlate(x, y, mode=mode)/ min(len(x), len(y)) / (sigma1*sigma2)
+        if mode=='same':
+            cross_corr =np.concatenate( [ cross_corr[N:], cross_corr[:N] ] )
+            cross_corr[N3:2*N3]=0
+    
+    if return_lags:
+        # --- Compute lags
+        if mode=='full':
+            lags = np.arange(-len(x) + 1, len(x)) * dt
+        elif mode=='same':
+            lags = (np.arange(len(x)) - N) * dt
+            lags = np.concatenate( [ lags[N:], lags[:N] ] )
+        else:
+            raise NotImplementedError(mode)
+        return cross_corr, lags
+    else:
+        return cross_corr
 
 
 def correlated_signal(coeff, n=1000, seed=None):
@@ -481,6 +522,63 @@ def correlated_signal(coeff, n=1000, seed=None):
     return x
 
 
+# --------------------------------------------------------------------------------}
+# ---  
+# --------------------------------------------------------------------------------{
+# def crosscorr_2(ts, iy0=None, iz0=None):
+#     """ Cross correlation along y
+#     If no index is provided, computed at mid box 
+#     """
+#     y = ts['y']
+#     if iy0 is None:
+#         iy0,iz0 = ts.iMid
+#     u, v, w = ts._longiline(iy0=iy0, iz0=iz0, removeMean=True)
+#     rho_uu_y=np.zeros(len(y))
+#     for iy,_ in enumerate(y):
+#         ud, vd, wd = ts._longiline(iy0=iy, iz0=iz0, removeMean=True)
+#         rho_uu_y[iy] = np.mean(u*ud)/(np.std(u)*np.std(ud))
+#     return y, rho_uu_y
+# 
+# def csd_longi(ts, iy0=None, iz0=None):
+#     """ Compute cross spectral density
+#     If no index is provided, computed at mid box 
+#     """
+#     import scipy.signal as sig
+#     u, v, w = ts._longiline(iy0=iy0, iz0=iz0, removeMean=True)
+#     t       = ts['t']
+#     dt      = t[1]-t[0]
+#     fs      = 1/dt
+#     fc, chi_uu = sig.csd(u, u, fs=fs, scaling='density') #nperseg=4096, noverlap=2048, detrend='constant')
+#     fc, chi_vv = sig.csd(v, v, fs=fs, scaling='density') #nperseg=4096, noverlap=2048, detrend='constant')
+#     fc, chi_ww = sig.csd(w, w, fs=fs, scaling='density') #nperseg=4096, noverlap=2048, detrend='constant')
+#     return fc, chi_uu, chi_vv, chi_ww
+# 
+# def coherence_longi(ts, iy0=None, iz0=None):
+#     """ Coherence on a longitudinal line for different delta y and delta z
+#     compared to a given point with index iy0,iz0
+#     """
+#     try:
+#         import scipy.signal as sig
+#     except:
+#         import pydatview.tools.spectral as sig
+#     if iy0 is None:
+#         iy0,iz0 = ts.iMid
+#     u, v, w = ts._longiline(iy0=iy0, iz0=iz0, removeMean=True)
+#     y = ts['y']
+#     z = ts['z']
+#     diy=1
+#     dy=y[iy]-y[iy0]
+#     # TODO
+#     iy = iy0+diy
+#     ud, vd, wd = ts._longiline(iy0=iy, iz0=iz0, removeMean=True)
+#     fc, coh_uu_y1 = sig.coherence(u,ud, fs=fs)
+
+
+
+
+# --------------------------------------------------------------------------------}
+# ---  
+# --------------------------------------------------------------------------------{
 def find_time_offset(t, f, g, outputAll=False):
     """ 
     Find time offset between two signals (may be negative)
