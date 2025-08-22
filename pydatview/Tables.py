@@ -764,20 +764,33 @@ class Table(object):
     def convertTimeColumns(self, dayfirst=False):
 
         def convertTimeColumn(c):
-            print('[INFO] Converting column {} to datetime, dayfirst: {}. May take a while...'.format(c, dayfirst))
-            try:
-                # TODO THIS CAN BE VERY SLOW...
-                self.data[c]=pd.to_datetime(self.data[c].values, dayfirst=dayfirst, infer_datetime_format=True).to_pydatetime()
-                print('       Done.')
-            except:
+            print('[INFO] Converting column {} to datetime, with dayfirst={}, ...'.format(c, dayfirst))
+            if pd.__version__.split('.')[0]=='2':
                 try:
-                    print('[FAIL] Attempting without infer datetime. May take a while...')
-                    self.data[c]=pd.to_datetime(self.data[c].values, dayfirst=dayfirst, infer_datetime_format=False).to_pydatetime()
-                    print('       Done.')
+                    self.data[c]=pd.to_datetime(self.data[c].values, dayfirst=dayfirst).to_pydatetime()
+                    print('[ OK ] Done.')
                 except:
-                    # Happens if values are e.g. "Monday, Tuesday"
-                    print('[FAIL] Inferring column as string instead')
-
+                    print('[FAIL] Conversion failed. Attempting now with dayfirst={}, ...'.format(not dayfirst))
+                    try:
+                        self.data[c]=pd.to_datetime(self.data[c].values, dayfirst=not dayfirst).to_pydatetime()
+                        print('[ OK ] Done.')
+                    except:
+                        # Happens if values are e.g. "Monday, Tuesday"
+                        print('[FAIL] Inferring column as string instead')
+            else:
+                # LEGACY CODE - REMOVE ME LATER
+                try:
+                    # TODO THIS CAN BE VERY SLOW...
+                    self.data[c]=pd.to_datetime(self.data[c].values, dayfirst=dayfirst, infer_datetime_format=True).to_pydatetime()
+                    print('[ OK ] Done.')
+                except:
+                    try:
+                        print('[FAIL] Attempting without infer datetime. May take a while...')
+                        self.data[c]=pd.to_datetime(self.data[c].values, dayfirst=dayfirst, infer_datetime_format=False).to_pydatetime()
+                        print('[ OK ] Done.')
+                    except:
+                        # Happens if values are e.g. "Monday, Tuesday"
+                        print('[FAIL] Inferring column as string instead')
 
         if len(self.data)>0:
             for i,c in enumerate(self.data.columns.values):
