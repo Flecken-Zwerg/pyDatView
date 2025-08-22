@@ -841,12 +841,13 @@ class FASTInputFileBase(File):
             s+='\n'
             s+='\n'
             return s
+
         for i in range(len(self.data)):
             d=self.data[i]
             if d['isComment']:
                 s+='{}'.format(d['value'])
             elif d['tabType']==TABTYPE_NOT_A_TAB:
-                if isinstance(d['value'], list):
+                if isinstance(d['value'], list) or isinstance(d['value'],np.ndarray):
                     sList=', '.join([str(x) for x in d['value']])
                     s+=toStringVLD(sList, d['label'], d['descr'])
                 else:

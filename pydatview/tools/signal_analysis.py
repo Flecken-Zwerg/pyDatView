@@ -426,31 +426,44 @@ def zero_crossings(y, x=None, direction=None, bouncingZero=False):
 # --------------------------------------------------------------------------------}
 # --- Correlation  
 # --------------------------------------------------------------------------------{
-def autoCorrCoeff(x, nMax=None):
-    if nMax is None:
-        nMax = len(x)
-    return np.array([1]+[np.corrcoef(x[:-i], x[i:])[0,1]  for i in range(1, nMax)])
-
-def correlation(x, nMax=80, dt=1, method='numpy'):
+def autoCorrCoeff(x, nMax=None, dt=1, method='corrcoef'):
     """ 
     Compute auto correlation of a signal
+     - nMax: number of values to return
     """
-    nvec   = np.arange(0,nMax)
+    x    = x.copy() - np.mean(x)
+    var  = np.var(x)
+    n    = len(x)
+    if nMax is None:
+        nMax = n
+    rvec = np.arange(0,nMax)
     if method=='manual':
-        sigma2 = np.var(x)
-        R    = np.zeros(nMax)
-        R[0] =1
-        for i,nDelay in enumerate(nvec[1:]):
-            R[i+1] = np.mean(  x[0:-nDelay] * x[nDelay:]  ) / sigma2
-            #R[i+1] = np.corrcoef(x[:-nDelay], x[nDelay:])[0,1] 
+        rho    = np.zeros(nMax)
+        rho[0] =1
+        for i,nDelay in enumerate(rvec[1:]):
+            rho[i+1] = np.mean(  x[0:-nDelay] * x[nDelay:]  ) / var
 
-    elif method=='numpy':
-        R= autoCorrCoeff(x, nMax=nMax)
+    elif method=='manual-roll':
+        rho    = np.zeros(len(rvec))
+        for i,r in enumerate(rvec):
+            shifted_x = np.roll(x, int(r)) #Shift x by tau
+            rho[i] = np.mean(x * shifted_x) / var
+
+    elif method=='corrcoef':
+        rho = np.array([1]+[np.corrcoef(x[:-i], x[i:])[0,1]  for i in range(1, nMax)])
+
+    elif method=='correlate':
+        rho = np.correlate(x, x, mode='full')[-n:] / (var * n)
+        rho = rho[:nMax]
     else:
-        raise NotImplementedError()
+        raise NotImplementedError(method)
 
-    tau = nvec*dt
-    return R, tau
+    tau = rvec*dt
+    return rho, tau
+
+def correlation(*args, **kwargs):
+    print('[WARN] welib.tools.signal_analysis.correlation will be deprecated use autoCorrCoeff')
+    return autoCorrCoeff(*args, **kwargs)
 # Auto-correlation comes in two versions: statistical and convolution. They both do the same, except for a little detail: The statistical version is normalized to be on the interval [-1,1]. Here is an example of how you do the statistical one:
 # 
 # 
@@ -458,39 +471,46 @@ def correlation(x, nMax=80, dt=1, method='numpy'):
 #     result = numpy.correlate(x, x, mode='full')
 #     return result[result.size/2:]
 
-
-def xCorrCoeff(x, y, dt=None, mode='same', return_lags=False, method='numpy'):
+    
+def xCorrCoeff(x1, x2, t=None, nMax=None, method='manual'):    
+    """ 
+    Compute cross-correlation coefficient between two signals.
     """
-    Compute and plot the cross-correlation coefficient between two signals.
-
-    Parameters:
-    - x: array-like, first signal values
-    - y: array-like, second signal values
-    """
-    from scipy.signal import correlate
-    # Compute cross-correlation
-
-    sigma1 = np.std(x)
-    sigma2 = np.std(y)
-    N      = len(x)//2
-    N3     = len(x)//3
-    if method=='manual':
-        nMax = len(x)
-        R    = np.zeros(nMax)
-        R[0] =1
-        nvec   = np.arange(0,nMax)
-        for i,nDelay in enumerate(nvec[1:]):
-            R[i+1] = np.mean(  x[0:-nDelay] * y[nDelay:]  ) / (sigma1*sigma2)
-            #R[i+1] = np.corrcoef(x[:-nDelay], x[nDelay:])[0,1] 
-        cross_corr= R
+    x1 = x1.copy()-np.mean(x1)
+    x2 = x2.copy()-np.mean(x2)
+    sigma1 = np.std(x1)
+    sigma2 = np.std(x2)
+    # Only if x1 and x2 have the same length for now
+    N1 = min(len(x1), len(x2))
+    if nMax is None:
+        nMax = len(x1)
+    if t is None:
+        t = np.array(range(N1))
+    if method=='subset-tauPos':
+        # Only if x1 and x2 have the same length
+        rho    = np.zeros(nMax)
+        rvec = np.arange(0,nMax)
+        for i,r in enumerate(rvec):
+            rho[i] = np.mean(  x1[:N1-r] * x2[r:]  ) / (sigma1*sigma2)
+    elif method=='manual':
+        rvec = np.array(range(-nMax+1,nMax))
+        rho   = np.zeros(len(rvec))
+        # TODO two for loops for pos and neg..
+        for i,r in enumerate(rvec):
+            if r>=0:
+                t11, x11 = t [0:N1-r], x1[0:N1-r]
+                t22, x22 = t [r:]   , x2[r:] 
+            else:
+                r=abs(r)
+                t22, x22 = t [0:N1-r], x2[0:N1-r]
+                t11, x11 = t [r:]   , x1[r:] 
+            rho[i] = np.mean(x11*x22) / (sigma1*sigma2)
     else:
+        raise NotImplementedError(method)    
         cross_corr = correlate(x, y, mode=mode)/ min(len(x), len(y)) / (sigma1*sigma2)
         if mode=='same':
             cross_corr =np.concatenate( [ cross_corr[N:], cross_corr[:N] ] )
             cross_corr[N3:2*N3]=0
-    
-    if return_lags:
-        # --- Compute lags
         if mode=='full':
             lags = np.arange(-len(x) + 1, len(x)) * dt
         elif mode=='same':
@@ -498,9 +518,13 @@ def xCorrCoeff(x, y, dt=None, mode='same', return_lags=False, method='numpy'):
             lags = np.concatenate( [ lags[N:], lags[:N] ] )
         else:
             raise NotImplementedError(mode)
-        return cross_corr, lags
-    else:
-        return cross_corr
+
+
+    tau = rvec * (t[1]-t[0])
+    return rho, tau
+
+
+
 
 
 def correlated_signal(coeff, n=1000, seed=None):
@@ -522,63 +546,6 @@ def correlated_signal(coeff, n=1000, seed=None):
     return x
 
 
-# --------------------------------------------------------------------------------}
-# ---  
-# --------------------------------------------------------------------------------{
-# def crosscorr_2(ts, iy0=None, iz0=None):
-#     """ Cross correlation along y
-#     If no index is provided, computed at mid box 
-#     """
-#     y = ts['y']
-#     if iy0 is None:
-#         iy0,iz0 = ts.iMid
-#     u, v, w = ts._longiline(iy0=iy0, iz0=iz0, removeMean=True)
-#     rho_uu_y=np.zeros(len(y))
-#     for iy,_ in enumerate(y):
-#         ud, vd, wd = ts._longiline(iy0=iy, iz0=iz0, removeMean=True)
-#         rho_uu_y[iy] = np.mean(u*ud)/(np.std(u)*np.std(ud))
-#     return y, rho_uu_y
-# 
-# def csd_longi(ts, iy0=None, iz0=None):
-#     """ Compute cross spectral density
-#     If no index is provided, computed at mid box 
-#     """
-#     import scipy.signal as sig
-#     u, v, w = ts._longiline(iy0=iy0, iz0=iz0, removeMean=True)
-#     t       = ts['t']
-#     dt      = t[1]-t[0]
-#     fs      = 1/dt
-#     fc, chi_uu = sig.csd(u, u, fs=fs, scaling='density') #nperseg=4096, noverlap=2048, detrend='constant')
-#     fc, chi_vv = sig.csd(v, v, fs=fs, scaling='density') #nperseg=4096, noverlap=2048, detrend='constant')
-#     fc, chi_ww = sig.csd(w, w, fs=fs, scaling='density') #nperseg=4096, noverlap=2048, detrend='constant')
-#     return fc, chi_uu, chi_vv, chi_ww
-# 
-# def coherence_longi(ts, iy0=None, iz0=None):
-#     """ Coherence on a longitudinal line for different delta y and delta z
-#     compared to a given point with index iy0,iz0
-#     """
-#     try:
-#         import scipy.signal as sig
-#     except:
-#         import pydatview.tools.spectral as sig
-#     if iy0 is None:
-#         iy0,iz0 = ts.iMid
-#     u, v, w = ts._longiline(iy0=iy0, iz0=iz0, removeMean=True)
-#     y = ts['y']
-#     z = ts['z']
-#     diy=1
-#     dy=y[iy]-y[iy0]
-#     # TODO
-#     iy = iy0+diy
-#     ud, vd, wd = ts._longiline(iy0=iy, iz0=iz0, removeMean=True)
-#     fc, coh_uu_y1 = sig.coherence(u,ud, fs=fs)
-
-
-
-
-# --------------------------------------------------------------------------------}
-# ---  
-# --------------------------------------------------------------------------------{
 def find_time_offset(t, f, g, outputAll=False):
     """ 
     Find time offset between two signals (may be negative)
