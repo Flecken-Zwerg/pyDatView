@@ -30,6 +30,13 @@ Steps:
   git push origin v0.3-dev :vdev )
 
 
+# Creating executable
+
+```bash
+pip install pynsis
+# edit installer.cfg
+python -m nsist installer.cfg # make installer
+```
 
 
 
