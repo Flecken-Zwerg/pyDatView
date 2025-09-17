@@ -69,6 +69,7 @@ def fileFormats(userpath=None, ignoreErrors=False, verbose=False):
     from .raawmat_file            import RAAWMatFile
     from .rosco_discon_file       import ROSCODISCONFile
     from .rosco_performance_file  import ROSCOPerformanceFile
+    from .hdf5_file               import Hdf5File
     priorities = []
     formats = []
     def addFormat(priority, fmt):
@@ -94,6 +95,7 @@ def fileFormats(userpath=None, ignoreErrors=False, verbose=False):
     addFormat(30, FileFormat(HAWCStab2IndFile))
     addFormat(30, FileFormat(HAWCStab2CmbFile))
     addFormat(30, FileFormat(MannBoxFile))
+    addFormat(30, FileFormat(Hdf5File))
     addFormat(40, FileFormat(FLEXBladeFile))
     addFormat(40, FileFormat(FLEXProfileFile))
     addFormat(40, FileFormat(FLEXOutFile))
