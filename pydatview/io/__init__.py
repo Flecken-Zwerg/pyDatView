@@ -69,7 +69,10 @@ def fileFormats(userpath=None, ignoreErrors=False, verbose=False):
     from .raawmat_file            import RAAWMatFile
     from .rosco_discon_file       import ROSCODISCONFile
     from .rosco_performance_file  import ROSCOPerformanceFile
-    from .hdf5_file               import Hdf5File
+    try:
+        from .hdf5_file               import Hdf5File
+    except ImportError:
+        Hdf5File=None
     from .plot3d_file             import Plot3DFile
     from .yaml_file               import YAMLFile
     from .airfoil_file            import AirfoilShapeFile
@@ -100,7 +103,8 @@ def fileFormats(userpath=None, ignoreErrors=False, verbose=False):
     addFormat(30, FileFormat(HAWCStab2IndFile))
     addFormat(30, FileFormat(HAWCStab2CmbFile))
     addFormat(30, FileFormat(MannBoxFile))
-    addFormat(30, FileFormat(Hdf5File))
+    if Hdf5File is not None:
+        addFormat(30, FileFormat(Hdf5File))
     addFormat(40, FileFormat(FLEXBladeFile))
     addFormat(40, FileFormat(FLEXProfileFile))
     addFormat(40, FileFormat(FLEXOutFile))

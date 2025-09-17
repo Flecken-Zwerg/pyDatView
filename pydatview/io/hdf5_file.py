@@ -1,4 +1,4 @@
-from wetb.gtsdf.gtsdf import load
+from .wetb.gtsdf.gtsdf import load
 from .file import File, WrongFormatError
 import numpy as np
 import pandas as pd
