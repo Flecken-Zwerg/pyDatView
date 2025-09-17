@@ -3,7 +3,7 @@ from .file import File, WrongFormatError
 import numpy as np
 import pandas as pd
 
-class Hdf5File(File):
+class HAWC2Hdf5File(File):
 
     @staticmethod
     def defaultExtensions():
@@ -11,12 +11,12 @@ class Hdf5File(File):
 
     @staticmethod
     def formatName():
-        return 'hdf5 file'
+        return 'HAWC2 hdf5 file'
 
     def __init__(self, filename=None, **kwargs):
         self.info = {}
         self.data = np.array([])
-        super(Hdf5File, self).__init__(filename=filename, **kwargs)
+        super(HAWC2Hdf5File, self).__init__(filename=filename, **kwargs)
 
     def _read(self):
         try:

@@ -12,10 +12,9 @@ from pydatview.io.wetb.gtsdf.unix_time import from_unix
 try:
     import h5py
 except ImportError as e:
-    print('[FAIL] h5py package not available. HDF5 format will fail. Do `pip install h5py` to use it.')
+    print('[FAIL] h5py package not available. HAWC2 HDF5 format will fail. Do `pip install h5py` to use it.')
     raise e
-#     h5py = None
-#     raise ImportError("HDF5 library cannot be loaded. Windows XP is a known cause of this problem\n%s" % e)
+    h5py = None
 
 block_name_fmt = "block%04d"
 
